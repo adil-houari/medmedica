@@ -73,9 +73,12 @@ function readQueryToFilters(q: any) {
         ...base,
         q: typeof q.q === 'string' ? q.q : base.q,
         role: typeof q.role === 'string' ? q.role : base.role,
-        location: typeof q.location === 'string' ? q.location : base.location,
-        contract: typeof q.contract === 'string' ? q.contract : base.contract,
-        schedule: typeof q.schedule === 'string' ? q.schedule : base.schedule,
+        locality: typeof q.locality === 'string' ? q.locality : base.locality,
+        radiusKm: typeof q.radiusKm === 'string' ? Number(q.radiusKm) : base.radiusKm,
+        contracts: typeof q.contracts === 'string' ? q.contracts.split(',').filter(Boolean) : base.contracts,
+        schedules: typeof q.schedules === 'string' ? q.schedules.split(',').filter(Boolean) : base.schedules,
+        provinces: typeof q.provinces === 'string' ? q.provinces.split(',').filter(Boolean) : base.provinces,
+        languages: typeof q.languages === 'string' ? q.languages.split(',').filter(Boolean) : base.languages,
         remoteOnly: q.remote === '1',
         urgentOnly: q.urgent === '1',
         salaryMin: typeof q.salaryMin === 'string' && q.salaryMin !== '' ? Number(q.salaryMin) : base.salaryMin,
@@ -87,9 +90,12 @@ function writeFiltersToQuery(f: JobFilters) {
     const q: any = {}
     if (f.q) q.q = f.q
     if (f.role) q.role = f.role
-    if (f.location) q.location = f.location
-    if (f.contract) q.contract = f.contract
-    if (f.schedule) q.schedule = f.schedule
+    if (f.locality) q.locality = f.locality
+    if (f.radiusKm !== 50) q.radiusKm = String(f.radiusKm)
+    if (f.contracts.length) q.contracts = f.contracts.join(',')
+    if (f.schedules.length) q.schedules = f.schedules.join(',')
+    if (f.provinces.length) q.provinces = f.provinces.join(',')
+    if (f.languages.length) q.languages = f.languages.join(',')
     if (f.remoteOnly) q.remote = '1'
     if (f.urgentOnly) q.urgent = '1'
     if (f.salaryMin != null) q.salaryMin = String(f.salaryMin)

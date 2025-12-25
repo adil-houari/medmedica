@@ -30,9 +30,12 @@ export type Job = {
 export type JobFilters = {
   q: string
   role: string
-  location: string
-  contract: string
-  schedule: string
+  locality: string
+  radiusKm: number
+  contracts: ContractType[]
+  schedules: ScheduleType[]
+  provinces: string[]
+  languages: string[]
   remoteOnly: boolean
   urgentOnly: boolean
   salaryMin: number | null
@@ -119,9 +122,12 @@ const JOBS: Job[] = [
 export const defaultJobFilters = (): JobFilters => ({
   q: '',
   role: '',
-  location: '',
-  contract: '',
-  schedule: '',
+  locality: '',
+  radiusKm: 50,
+  contracts: [],
+  schedules: [],
+  provinces: [],
+  languages: [],
   remoteOnly: false,
   urgentOnly: false,
   salaryMin: null,
@@ -130,6 +136,34 @@ export const defaultJobFilters = (): JobFilters => ({
 
 export function useJobs() {
   const jobs = computed(() => JOBS)
+
+  const options = {
+    roles: [
+      'Infirmier(ère)',
+      'Aide-soignant(e)',
+      'Médecin',
+      'Kinésithérapeute',
+      'Pharmacien(ne)',
+      'Psychologue',
+      'Sage-femme',
+      'Technicien(ne) de labo',
+    ] as JobRole[],
+    radius: [10, 20, 50, 100],
+    contracts: ['CDI', 'CDD', 'Indépendant', 'Intérim', 'Stage'] as ContractType[],
+    schedules: ['Temps plein', 'Temps partiel', 'Nuit', 'Week-end'] as ScheduleType[],
+    provinces: ['Bruxelles', 'Anvers', 'Liège', 'Hainaut', 'Namur', 'Luxembourg', 'Brabant wallon', 'Flandre orientale', 'Flandre occidentale', 'Limbourg'],
+    languages: ['Français', 'Néerlandais', 'Anglais'],
+  }
+
+  const getCounts = (filters: JobFilters) => {
+    const filtered = applyFilters(JOBS, filters)
+    return {
+      contracts: new Map(options.contracts.map(c => [c, filtered.filter(j => j.contract === c).length])),
+      schedules: new Map(options.schedules.map(s => [s, filtered.filter(j => j.schedule === s).length])),
+      provinces: new Map(options.provinces.map(p => [p, filtered.filter(j => j.location.includes(p)).length])), // approximate
+      languages: new Map(options.languages.map(l => [l, filtered.length])), // placeholder, since no language in jobs
+    }
+  }
 
   const isNew = (postedAt: string) => {
     const days = (Date.now() - new Date(postedAt).getTime()) / (1000 * 60 * 60 * 24)
@@ -158,9 +192,11 @@ export function useJobs() {
     }
 
     if (filters.role) out = out.filter(j => j.role === filters.role)
-    if (filters.location) out = out.filter(j => j.location === filters.location)
-    if (filters.contract) out = out.filter(j => j.contract === filters.contract)
-    if (filters.schedule) out = out.filter(j => j.schedule === filters.schedule)
+    if (filters.locality) out = out.filter(j => j.location.toLowerCase().includes(filters.locality.toLowerCase()))
+    if (filters.contracts.length) out = out.filter(j => filters.contracts.includes(j.contract))
+    if (filters.schedules.length) out = out.filter(j => filters.schedules.includes(j.schedule))
+    if (filters.provinces.length) out = out.filter(j => filters.provinces.some(p => j.location.includes(p)))
+    if (filters.languages.length) out = out.filter(j => true) // placeholder
     if (filters.remoteOnly) out = out.filter(j => !!j.remote)
     if (filters.urgentOnly) out = out.filter(j => !!j.urgent)
 
@@ -180,6 +216,6 @@ export function useJobs() {
     return out
   }
 
-  const meta = { isNew, formatSalary, applyFilters }
+  const meta = { options, getCounts, isNew, formatSalary, applyFilters }
   return { jobs, ...meta }
 }

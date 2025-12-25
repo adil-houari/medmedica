@@ -1,190 +1,350 @@
 <template>
-    <aside class="panel">
-        <div class="panelHead">
-            <p class="title">Filtres</p>
-            <button class="reset" type="button" @click="$emit('reset')">Réinitialiser</button>
-        </div>
+  <aside class="filters">
+    <div class="head">
+      <div>
+        <div class="title">Filtres</div>
+        <div class="subtitle">Affiner ta recherche</div>
+      </div>
 
-        <div class="section">
-            <p class="label">Contrat</p>
-            <div class="chips">
-                <button v-for="c in contracts" :key="c" class="chip" :class="{ active: modelValue.contract === c }"
-                    type="button" @click="toggle('contract', c)">
-                    {{ c }}
-                </button>
-            </div>
-        </div>
+      <button class="reset" type="button" @click="resetAll">Réinitialiser</button>
+    </div>
 
-        <div class="section">
-            <p class="label">Horaire</p>
-            <div class="chips">
-                <button v-for="s in schedules" :key="s" class="chip" :class="{ active: modelValue.schedule === s }"
-                    type="button" @click="toggle('schedule', s)">
-                    {{ s }}
-                </button>
-            </div>
-        </div>
+    <!-- Search -->
+    <div class="block">
+      <div class="label">Recherche</div>
+      <input
+        class="input"
+        :value="modelValue.q"
+        placeholder="Poste, hôpital, mot-clé…"
+        @input="update({ q: ($event.target as HTMLInputElement).value })"
+      />
+    </div>
 
-        <div class="section">
-            <p class="label">Options</p>
+    <!-- Role -->
+    <div class="block">
+      <div class="label">Type de poste</div>
+      <select
+        class="select"
+        :value="modelValue.role"
+        @change="update({ role: ($event.target as HTMLSelectElement).value as any })"
+      >
+        <option value="">Tous</option>
+        <option v-for="r in options.roles" :key="r" :value="r">{{ r }}</option>
+      </select>
+    </div>
 
-            <label class="check">
-                <input type="checkbox" :checked="modelValue.urgentOnly"
-                    @change="set('urgentOnly', ($event.target as HTMLInputElement).checked)" />
-                <span>Urgent uniquement</span>
-            </label>
+    <!-- Locality + radius -->
+    <div class="block">
+      <div class="label">Localité</div>
+      <input
+        class="input"
+        :value="modelValue.locality"
+        placeholder="Ex: Bruxelles"
+        @input="update({ locality: ($event.target as HTMLInputElement).value })"
+      />
 
-            <label class="check">
-                <input type="checkbox" :checked="modelValue.remoteOnly"
-                    @change="set('remoteOnly', ($event.target as HTMLInputElement).checked)" />
-                <span>Remote uniquement</span>
-            </label>
-        </div>
+      <div class="label" style="margin-top: 10px;">Périmètre</div>
+      <select
+        class="select"
+        :value="modelValue.radiusKm"
+        @change="update({ radiusKm: Number(($event.target as HTMLSelectElement).value) as any })"
+      >
+        <option v-for="r in options.radius" :key="r" :value="r">{{ r }} km</option>
+      </select>
+    </div>
 
-        <div class="section">
-            <p class="label">Salaire minimum (€ / mois)</p>
-            <input class="input" type="number" min="0" :value="modelValue.salaryMin ?? ''"
-                @input="set('salaryMin', toNumberOrNull(($event.target as HTMLInputElement).value))"
-                placeholder="ex: 2500" />
-        </div>
-    </aside>
+    <!-- Contracts (chips) -->
+    <div class="block">
+      <div class="label">Contrat</div>
+      <div class="chips">
+        <button
+          v-for="c in options.contracts"
+          :key="c"
+          type="button"
+          class="chip"
+          :class="{ active: modelValue.contracts.includes(c) }"
+          @click="toggle('contracts', c)"
+        >
+          {{ c }}
+          <span class="count">[{{ counts.contracts.get(c) ?? 0 }}]</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Schedules (chips) -->
+    <div class="block">
+      <div class="label">Horaire</div>
+      <div class="chips">
+        <button
+          v-for="s in options.schedules"
+          :key="s"
+          type="button"
+          class="chip"
+          :class="{ active: modelValue.schedules.includes(s) }"
+          @click="toggle('schedules', s)"
+        >
+          {{ s }}
+          <span class="count">[{{ counts.schedules.get(s) ?? 0 }}]</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Options -->
+    <div class="block">
+      <div class="label">Options</div>
+
+      <label class="check">
+        <input
+          type="checkbox"
+          :checked="modelValue.urgentOnly"
+          @change="update({ urgentOnly: ($event.target as HTMLInputElement).checked })"
+        />
+        Urgent uniquement
+      </label>
+
+      <label class="check">
+        <input
+          type="checkbox"
+          :checked="modelValue.remoteOnly"
+          @change="update({ remoteOnly: ($event.target as HTMLInputElement).checked })"
+        />
+        Remote uniquement
+      </label>
+    </div>
+
+    <!-- Province (checkbox list) -->
+    <div class="block">
+      <div class="label">Province</div>
+      <div class="list">
+        <label v-for="p in options.provinces" :key="p" class="row">
+          <input
+            type="checkbox"
+            :checked="modelValue.provinces.includes(p)"
+            @change="toggle('provinces', p)"
+          />
+          <span class="rowText">{{ p }}</span>
+          <span class="rowCount">[{{ counts.provinces.get(p) ?? 0 }}]</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Language (checkbox list) -->
+    <div class="block">
+      <div class="label">Langue de l’annonce</div>
+      <div class="list">
+        <label v-for="l in options.languages" :key="l" class="row">
+          <input
+            type="checkbox"
+            :checked="modelValue.languages.includes(l)"
+            @change="toggle('languages', l)"
+          />
+          <span class="rowText">{{ l }}</span>
+          <span class="rowCount">[{{ counts.languages.get(l) ?? 0 }}]</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Salary -->
+    <div class="block">
+      <div class="label">Salaire minimum (€ / mois)</div>
+      <input
+        class="input"
+        type="number"
+        :value="modelValue.salaryMin ?? ''"
+        placeholder="ex: 2500"
+        @input="onSalaryInput"
+      />
+    </div>
+  </aside>
 </template>
 
 <script setup lang="ts">
 import type { JobFilters } from '~/composables/useJobs'
+import { defaultJobFilters, useJobs } from '~/composables/useJobs'
 
-const props = defineProps<{
-    modelValue: JobFilters
-    contracts: string[]
-    schedules: string[]
-}>()
+const props = defineProps<{ modelValue: JobFilters }>()
+const emit = defineEmits<{ 'update:modelValue': [JobFilters] }>()
 
-const emit = defineEmits<{
-    (e: 'update:modelValue', v: JobFilters): void
-    (e: 'reset'): void
-}>()
+const { options, getCounts } = useJobs()
 
-function set<K extends keyof JobFilters>(key: K, value: JobFilters[K]) {
-    emit('update:modelValue', { ...props.modelValue, [key]: value })
+const counts = computed(() => getCounts(props.modelValue))
+
+function update(patch: Partial<JobFilters>) {
+  emit('update:modelValue', { ...props.modelValue, ...patch })
 }
 
-function toggle<K extends 'contract' | 'schedule'>(key: K, value: string) {
-    set(key, props.modelValue[key] === value ? '' : (value as any))
+type MultiKey = 'contracts' | 'schedules' | 'provinces' | 'languages'
+type MultiValue<K extends MultiKey> = JobFilters[K][number]
+
+function toggle<K extends MultiKey>(key: K, value: MultiValue<K>) {
+  const current = props.modelValue[key] as MultiValue<K>[]
+  const next = current.includes(value) ? current.filter(v => v !== value) : [...current, value]
+  update({ [key]: next } as Partial<JobFilters>)
 }
 
-function toNumberOrNull(v: string) {
-    const n = Number(v)
-    return Number.isFinite(n) && v !== '' ? n : null
+function resetAll() {
+  emit('update:modelValue', defaultJobFilters())
+}
+
+function onSalaryInput(e: Event) {
+  const raw = (e.target as HTMLInputElement).value
+  update({ salaryMin: raw ? Number(raw) : null })
 }
 </script>
 
-<style scoped>
-.panel {
-    position: sticky;
-    top: 90px;
-    border-radius: 18px;
-    background: rgba(255, 255, 255, .75);
-    border: 1px solid rgba(15, 23, 42, .10);
-    box-shadow: 0 18px 60px rgba(2, 6, 23, .08);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    padding: 14px;
+<style scoped lang="scss">
+.filters {
+  border-radius: 18px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.75);
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  box-shadow: 0 18px 60px rgba(2, 6, 23, 0.08);
+  backdrop-filter: blur(10px);
 }
 
-.panelHead {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    margin-bottom: 10px;
-}
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
 
-.title {
-    margin: 0;
+  .title {
     font-weight: 950;
-    color: #0f172a;
+    font-size: 16px;
+    letter-spacing: -0.01em;
+  }
+  .subtitle {
+    margin-top: 2px;
+    font-size: 12px;
+    font-weight: 800;
+    color: rgba(15, 23, 42, 0.55);
+  }
 }
 
 .reset {
-    border: 1px solid rgba(15, 23, 42, .12);
-    background: rgba(15, 23, 42, .04);
-    color: rgba(15, 23, 42, .78);
-    font-weight: 900;
-    border-radius: 12px;
-    padding: 8px 10px;
-    cursor: pointer;
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  background: rgba(255, 255, 255, 0.75);
+  font-weight: 900;
+  cursor: pointer;
+
+  &:hover {
+    border-color: rgba(37, 99, 235, 0.25);
+  }
 }
 
-.section {
+.block {
+  & + & {
     margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid rgba(15, 23, 42, 0.06);
+  }
 }
 
 .label {
-    margin: 0 0 10px 0;
-    font-size: 12px;
-    font-weight: 900;
-    letter-spacing: .12em;
-    text-transform: uppercase;
-    color: rgba(15, 23, 42, .62);
+  font-size: 12px;
+  font-weight: 950;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(15, 23, 42, 0.55);
+  margin-bottom: 10px;
+}
+
+.input,
+.select {
+  width: 100%;
+  height: 44px;
+  border-radius: 14px;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  padding: 0 14px;
+  font-weight: 800;
+  outline: none;
+  background: rgba(255, 255, 255, 0.85);
+
+  &:focus {
+    border-color: rgba(37, 99, 235, 0.35);
+    box-shadow: 0 0 0 5px rgba(37, 99, 235, 0.12);
+  }
 }
 
 .chips {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
 .chip {
-    border: 1px solid rgba(15, 23, 42, .12);
-    background: rgba(255, 255, 255, .75);
-    border-radius: 999px;
-    padding: 10px 12px;
+  height: 40px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  background: rgba(255, 255, 255, 0.75);
+  font-weight: 950;
+  cursor: pointer;
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+
+  .count {
     font-weight: 900;
-    color: rgba(15, 23, 42, .72);
-    cursor: pointer;
-    transition: transform 150ms ease, background 150ms ease, border-color 150ms ease;
-}
+    color: rgba(15, 23, 42, 0.45);
+  }
 
-.chip:hover {
-    transform: translateY(-1px);
-    border-color: rgba(37, 99, 235, .22);
-    background: rgba(37, 99, 235, .06);
-}
+  &:hover {
+    border-color: rgba(37, 99, 235, 0.25);
+  }
 
-.chip.active {
-    border-color: rgba(37, 99, 235, .35);
-    background: rgba(37, 99, 235, .10);
-    color: rgba(37, 99, 235, .95);
+  &.active {
+    border-color: rgba(37, 99, 235, 0.28);
+    background: rgba(37, 99, 235, 0.08);
+    box-shadow: 0 10px 25px rgba(37, 99, 235, 0.12);
+  }
 }
 
 .check {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-    font-weight: 900;
-    color: rgba(15, 23, 42, .75);
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  font-weight: 900;
+  color: rgba(15, 23, 42, 0.75);
+
+  & + & {
     margin-top: 10px;
+  }
+
+  input {
+    width: 18px;
+    height: 18px;
+  }
 }
 
-.check input {
-    width: 16px;
-    height: 16px;
-    accent-color: #2563eb;
+.list {
+  display: grid;
+  gap: 10px;
 }
 
-.input {
-    width: 100%;
-    height: 44px;
-    border-radius: 12px;
-    border: 1px solid rgba(15, 23, 42, .12);
-    background: rgba(255, 255, 255, .85);
-    padding: 0 12px;
+.row {
+  display: grid;
+  grid-template-columns: 18px 1fr auto;
+  align-items: center;
+  gap: 10px;
+
+  input {
+    width: 18px;
+    height: 18px;
+  }
+
+  .rowText {
     font-weight: 900;
-    outline: none;
-}
+    color: rgba(15, 23, 42, 0.78);
+  }
 
-.input:focus {
-    border-color: rgba(37, 99, 235, .30);
-    box-shadow: 0 0 0 4px rgba(37, 99, 235, .14);
+  .rowCount {
+    font-weight: 900;
+    color: rgba(15, 23, 42, 0.35);
+  }
 }
 </style>
