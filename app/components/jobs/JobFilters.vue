@@ -12,22 +12,15 @@
     <!-- Search -->
     <div class="block">
       <div class="label">Recherche</div>
-      <input
-        class="input"
-        :value="modelValue.q"
-        placeholder="Poste, hôpital, mot-clé…"
-        @input="update({ q: ($event.target as HTMLInputElement).value })"
-      />
+      <input class="input" :value="modelValue.q" placeholder="Poste, hôpital, mot-clé…"
+        @input="update({ q: ($event.target as HTMLInputElement).value })" />
     </div>
 
     <!-- Role -->
     <div class="block">
       <div class="label">Type de poste</div>
-      <select
-        class="select"
-        :value="modelValue.role"
-        @change="update({ role: ($event.target as HTMLSelectElement).value as any })"
-      >
+      <select class="select" :value="modelValue.role"
+        @change="update({ role: ($event.target as HTMLSelectElement).value as any })">
         <option value="">Tous</option>
         <option v-for="r in options.roles" :key="r" :value="r">{{ r }}</option>
       </select>
@@ -36,19 +29,12 @@
     <!-- Locality + radius -->
     <div class="block">
       <div class="label">Localité</div>
-      <input
-        class="input"
-        :value="modelValue.locality"
-        placeholder="Ex: Bruxelles"
-        @input="update({ locality: ($event.target as HTMLInputElement).value })"
-      />
+      <input class="input" :value="modelValue.locality" placeholder="Ex: Bruxelles"
+        @input="update({ locality: ($event.target as HTMLInputElement).value })" />
 
       <div class="label" style="margin-top: 10px;">Périmètre</div>
-      <select
-        class="select"
-        :value="modelValue.radiusKm"
-        @change="update({ radiusKm: Number(($event.target as HTMLSelectElement).value) as any })"
-      >
+      <select class="select" :value="modelValue.radiusKm"
+        @change="update({ radiusKm: Number(($event.target as HTMLSelectElement).value) as any })">
         <option v-for="r in options.radius" :key="r" :value="r">{{ r }} km</option>
       </select>
     </div>
@@ -57,14 +43,8 @@
     <div class="block">
       <div class="label">Contrat</div>
       <div class="chips">
-        <button
-          v-for="c in options.contracts"
-          :key="c"
-          type="button"
-          class="chip"
-          :class="{ active: modelValue.contracts.includes(c) }"
-          @click="toggle('contracts', c)"
-        >
+        <button v-for="c in options.contracts" :key="c" type="button" class="chip"
+          :class="{ active: modelValue.contracts.includes(c) }" @click="toggle('contracts', c)">
           {{ c }}
           <span class="count">[{{ counts.contracts.get(c) ?? 0 }}]</span>
         </button>
@@ -75,14 +55,8 @@
     <div class="block">
       <div class="label">Horaire</div>
       <div class="chips">
-        <button
-          v-for="s in options.schedules"
-          :key="s"
-          type="button"
-          class="chip"
-          :class="{ active: modelValue.schedules.includes(s) }"
-          @click="toggle('schedules', s)"
-        >
+        <button v-for="s in options.schedules" :key="s" type="button" class="chip"
+          :class="{ active: modelValue.schedules.includes(s) }" @click="toggle('schedules', s)">
           {{ s }}
           <span class="count">[{{ counts.schedules.get(s) ?? 0 }}]</span>
         </button>
@@ -94,20 +68,14 @@
       <div class="label">Options</div>
 
       <label class="check">
-        <input
-          type="checkbox"
-          :checked="modelValue.urgentOnly"
-          @change="update({ urgentOnly: ($event.target as HTMLInputElement).checked })"
-        />
+        <input type="checkbox" :checked="modelValue.urgentOnly"
+          @change="update({ urgentOnly: ($event.target as HTMLInputElement).checked })" />
         Urgent uniquement
       </label>
 
       <label class="check">
-        <input
-          type="checkbox"
-          :checked="modelValue.remoteOnly"
-          @change="update({ remoteOnly: ($event.target as HTMLInputElement).checked })"
-        />
+        <input type="checkbox" :checked="modelValue.remoteOnly"
+          @change="update({ remoteOnly: ($event.target as HTMLInputElement).checked })" />
         Remote uniquement
       </label>
     </div>
@@ -117,11 +85,7 @@
       <div class="label">Province</div>
       <div class="list">
         <label v-for="p in options.provinces" :key="p" class="row">
-          <input
-            type="checkbox"
-            :checked="modelValue.provinces.includes(p)"
-            @change="toggle('provinces', p)"
-          />
+          <input type="checkbox" :checked="modelValue.provinces.includes(p)" @change="toggle('provinces', p)" />
           <span class="rowText">{{ p }}</span>
           <span class="rowCount">[{{ counts.provinces.get(p) ?? 0 }}]</span>
         </label>
@@ -133,11 +97,7 @@
       <div class="label">Langue de l’annonce</div>
       <div class="list">
         <label v-for="l in options.languages" :key="l" class="row">
-          <input
-            type="checkbox"
-            :checked="modelValue.languages.includes(l)"
-            @change="toggle('languages', l)"
-          />
+          <input type="checkbox" :checked="modelValue.languages.includes(l)" @change="toggle('languages', l)" />
           <span class="rowText">{{ l }}</span>
           <span class="rowCount">[{{ counts.languages.get(l) ?? 0 }}]</span>
         </label>
@@ -147,13 +107,8 @@
     <!-- Salary -->
     <div class="block">
       <div class="label">Salaire minimum (€ / mois)</div>
-      <input
-        class="input"
-        type="number"
-        :value="modelValue.salaryMin ?? ''"
-        placeholder="ex: 2500"
-        @input="onSalaryInput"
-      />
+      <input class="input" type="number" :value="modelValue.salaryMin ?? ''" placeholder="ex: 2500"
+        @input="onSalaryInput" />
     </div>
   </aside>
 </template>
@@ -214,6 +169,7 @@ function onSalaryInput(e: Event) {
     font-size: 16px;
     letter-spacing: -0.01em;
   }
+
   .subtitle {
     margin-top: 2px;
     font-size: 12px;
@@ -237,7 +193,7 @@ function onSalaryInput(e: Event) {
 }
 
 .block {
-  & + & {
+  &+& {
     margin-top: 14px;
     padding-top: 14px;
     border-top: 1px solid rgba(15, 23, 42, 0.06);
@@ -311,7 +267,7 @@ function onSalaryInput(e: Event) {
   font-weight: 900;
   color: rgba(15, 23, 42, 0.75);
 
-  & + & {
+  &+& {
     margin-top: 10px;
   }
 
